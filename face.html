@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mystic Cam – Funny Future Predictor</title>
+<style>
+  :root {
+    --primary: #7e56ff;
+    --primary-light: #9d7aff;
+    --bg-light: #f8faff;
+    --bg-dark: #1a1a2e;
+    --text-light: #222;
+    --text-dark: #eee;
+    --glass: rgba(255 255 255 / 0.3);
+    --border: rgba(255 255 255 / 0.4);
+    --shadow-light: rgba(126, 86, 255, 0.2);
+    --shadow-dark: rgba(126, 86, 255, 0.4);
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    min-height: 100vh;
+    font-family: var(--font-family);
+    background: var(--bg-light);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px 80px;
+    text-align: center;
+    user-select: none;
+    transition: background-color 0.4s, color 0.4s;
+    position: relative;
+    z-index: 1;
+  }
+  body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+  #backgroundCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+  h1 {
+    font-size: 2.75rem;
+    margin-bottom: 36px;
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: 1.3px;
+    text-shadow: 0 0 6px var(--primary-light);
+    transition: color 0.4s;
+    position: relative;
+    z-index: 2;
+  }
+  body.dark h1 {
+    color: var(--primary-light);
+    text-shadow: 0 0 10px #b39eff;
+  }
+  video, img#photo {
+    max-width: 320px;
+    width: 100%;
+    border-radius: 24px;
+    margin: 24px 0;
+    box-shadow: 0 8px 22px var(--shadow-light);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    border: 3px solid transparent;
+    background-color: #e6e9ff;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+    position: relative;
+    z-index: 2;
+  }
+  video:hover, img#photo:hover {
+    box-shadow: 0 14px 38px var(--shadow-dark);
+    border-color: var(--primary-light);
+  }
+  button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 40px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 5px 16px var(--shadow-light);
+    user-select: none;
+    position: relative;
+    z-index: 2;
+  }
+  button:hover,
+  button:focus-visible {
+    background: var(--primary-light);
+    box-shadow: 0 9px 28px var(--shadow-dark);
+    transform: scale(1.07);
+    outline: none;
+  }
+  button:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px var(--shadow-light);
+  }
+  #popup {
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    max-width: 320px;
+    width: 90vw;
+    background: var(--glass);
+    border-radius: 24px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.15);
+    padding: 28px 32px 36px;
+    color: #111;
+    backdrop-filter: blur(16px);
+    display: none;
+    z-index: 110;
+    animation: fadeInPopup 0.4s ease forwards;
+    user-select: text;
+  }
+  body.dark #popup {
+    color: var(--text-dark);
+    border-color: rgba(255 255 255 / 0.15);
+    background: rgba(50 50 80 / 0.35);
+    box-shadow: 0 18px 48px rgba(20, 20, 40, 0.6);
+  }
+  @keyframes fadeInPopup {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  #predictionText {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    letter-spacing: 0.02em;
+  }
+  #countdown {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--primary);
+    margin-top: 20px;
+    user-select: none;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 12px var(--primary-light);
+    position: relative;
+    z-index: 2;
+  }
+  #countdown.hide {
+    display: none;
+  }
+  #savePhotoBtn {
+    margin-top: 12px;
+    background: #4caf50;
+    box-shadow: 0 5px 16px rgba(76, 175, 80, 0.3);
+    transition: background-color 0.3s ease;
+    position: relative;
+    z-index: 2;
+  }
+  #savePhotoBtn:hover,
+  #savePhotoBtn:focus-visible {
+    background: #66bb6a;
+    box-shadow: 0 8px 24px rgba(102, 187, 106, 0.5);
+  }
+  #history {
+    margin-top: 40px;
+    max-width: 320px;
+    width: 90vw;
+    text-align: left;
+    user-select: text;
+    position: relative;
+    z-index: 2;
+  }
+  #history h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--primary);
+  }
+  #historyList {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    color: var(--text-light);
+  }
+  body.dark #historyList {
+    color: var(--text-dark);
+  }
+  #historyList li {
+    background: var(--glass);
+    margin-bottom: 8px;
+    padding: 10px 15px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.3;
+    backdrop-filter: blur(8px);
+  }
+  #themeToggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: var(--primary);
+    padding: 10px 18px;
+    border-radius: 30px;
+    box-shadow: 0 5px 16px var(--shadow-light);
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    user-select: none;
+    z-index: 150;
+  }
+  #themeToggle:hover,
+  #themeToggle:focus-visible {
+    background: var(--primary-light);
+    outline: none;
+  }
+  .flash {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: white;
+    opacity: 0;
+    z-index: 200;
+    pointer-events: none;
+    animation: flashAnim 0.4s ease;
+  }
+  @keyframes flashAnim {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="backgroundCanvas"></canvas>
+
+<button id="themeToggle" aria-label="Toggle dark and light mode">🌙 Dark Mode</button>
+
+<h1>🔮 Mystic Cam</h1>
+
+<video id="video" autoplay playsinline muted></video>
+
+<button id="captureBtn" aria-label="Capture and reveal your future">Capture &amp; Reveal Future</button>
+
+<div id="countdown" class="hide" aria-live="assertive" aria-atomic="true"></div>
+
+<img id="photo"  />
+
+<button id="savePhotoBtn" style="display:none;" aria-label="Save captured photo">Save Photo</button>
+
+<div id="popup" role="alert" aria-live="assertive">
+  <div id="predictionText"></div>
+  <button id="closePopup">Okay, Got It</button>
+</div>
+
+<section id="history" aria-label="Past predictions history">
+  <h2>Past Predictions</h2>
+  <ul id="historyList"></ul>
+</section>
+
+<script>
+  // Background orbs canvas setup
+  const canvas = document.getElementById('backgroundCanvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  const orbs = [];
+  const orbCount = 30;
+
+  function Orb() {
+    this.x = Math.random() * width;
+    this.y = Math.random() * height;
+    this.radius = 10 + Math.random() * 12;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.alpha = 0.2 + Math.random() * 0.3;
+    this.color = `rgba(126, 86, 255, ${this.alpha})`;
+  }
+  Orb.prototype.update = function() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x < -this.radius) this.x = width + this.radius;
+    else if (this.x > width + this.radius) this.x = -this.radius;
+    if (this.y < -this.radius) this.y = height + this.radius;
+    else if (this.y > height + this.radius) this.y = -this.radius;
+  };
+  Orb.prototype.draw = function() {
+    const gradient = ctx.createRadialGradient(this.x, this.y, this.radius * 0.1, this.x, this.y, this.radius);
+    gradient.addColorStop(0, `rgba(126, 86, 255, ${this.alpha})`);
+    gradient.addColorStop(1, 'rgba(126, 86, 255, 0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  function setup() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    orbs.length = 0;
+    for(let i = 0; i < orbCount; i++) {
+      orbs.push(new Orb());
+    }
+  }
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    for(const orb of orbs) {
+      orb.update();
+      orb.draw();
+    }
+    requestAnimationFrame(animate);
+  }
+  window.addEventListener('resize', () => {
+    setup();
+  });
+  setup();
+  animate();
+
+  // Dark mode toggle
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+  function updateThemeUI() {
+    if(body.classList.contains('dark')) {
+      themeToggle.textContent = '☀️ Light Mode';
+      themeToggle.setAttribute('aria-label', 'Switch to light mode');
+    } else {
+      themeToggle.textContent = '🌙 Dark Mode';
+      themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+    }
+  }
+  themeToggle.addEventListener('click', () => {
+    body.classList.toggle('dark');
+    updateThemeUI();
+  });
+  updateThemeUI();
+
+  // Camera setup
+  const video = document.getElementById('video');
+  const captureBtn = document.getElementById('captureBtn');
+  const photo = document.getElementById('photo');
+  const popup = document.getElementById('popup');
+  const predictionText = document.getElementById('predictionText');
+  const closePopup = document.getElementById('closePopup');
+  const countdownEl = document.getElementById('countdown');
+  const savePhotoBtn = document.getElementById('savePhotoBtn');
+  const historyList = document.getElementById('historyList');
+
+  const predictions = [
+  "In the near future, you'll find your lost socks... or maybe not. 🧦🤔",
+  "You will soon discover that your coffee is secretly judging you. ☕👀",
+  "Beware! Your future involves an awkward Zoom call. 💻😬",
+  "A mysterious stranger will send you memes at 3 AM. 🕒📱😂",
+  "You are destined to become the world's best procrastinator. 🛋⏳",
+  "Your future self says: 'Stop checking your phone, seriously.' 📵🙄",
+  "You will invent a new dance move called 'The Buffering.' 💃🔄",
+  "Your biggest adventure tomorrow: finding the TV remote. 🕵‍♂📺",
+  "Aliens have marked you as 'interesting.' Good luck with that. 👽✨",
+  "You will achieve enlightenment... after your next nap. 🧘‍♂😴",
+  "You will accidentally reply-all to an email. Oops! 📧😳",
+  "Your snack stash will mysteriously disappear... again. 🍪🕵‍♀",
+  "Today’s mood: Powered by caffeine and chaos. ☕🔥",
+  "You might become a superhero... but only in your dreams. 🦸‍♂💭",
+  "Your plants are judging your watering skills. 🌱😒",
+  "Warning: Your Wi-Fi will betray you at the worst moment. 📶💔",
+  "You will master the art of pretending to work. 🎭⌨",
+  "Someone will ask if you’re ‘busy’ while you’re doing nothing. 🤷‍♂😌",
+  "Your future involves accidentally liking old photos. 📸🙈",
+  "Congratulations! You will survive another day of adulting. 🎉🥳"
+];
+
+  // Access camera
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+      await video.play();
+    } catch (e) {
+      alert("Oops! Can't access your camera: " + e.message);
+    }
+  }
+  startCamera();
+
+  // Save prediction history in memory (can extend to localStorage)
+  let predictionHistory = [];
+
+  // Countdown before capture
+  function countdown(seconds) {
+    return new Promise(resolve => {
+      countdownEl.textContent = seconds;
+      countdownEl.classList.remove('hide');
+      let current = seconds;
+      const interval = setInterval(() => {
+        current--;
+        if(current > 0) {
+          countdownEl.textContent = current;
+        } else {
+          clearInterval(interval);
+          countdownEl.classList.add('hide');
+          resolve();
+        }
+      }, 1000);
+    });
+  }
+
+  // Flash effect
+  function flashEffect() {
+    const flash = document.createElement('div');
+    flash.className = 'flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 400);
+  }
+
+  // Capture photo and show prediction
+  captureBtn.addEventListener('click', async () => {
+    captureBtn.disabled = true;
+    await countdown(3);
+    flashEffect();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 320;
+    canvas.height = video.videoHeight || 240;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imgDataUrl = canvas.toDataURL('image/png');
+
+    photo.src = imgDataUrl;
+    photo.style.display = 'block';
+    savePhotoBtn.style.display = 'inline-block';
+
+    // Random prediction
+    const randomPrediction = predictions[Math.floor(Math.random() * predictions.length)];
+    predictionText.textContent = randomPrediction;
+    popup.style.display = 'block';
+
+    // Save to history
+    predictionHistory.unshift(randomPrediction);
+    renderHistory();
+
+    captureBtn.disabled = false;
+  });
+
+  closePopup.addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+
+  // Save photo button logic
+  savePhotoBtn.addEventListener('click', () => {
+    if(!photo.src) return;
+    const a = document.createElement('a');
+    a.href = photo.src;
+    a.download = 'mystic-cam-selfie.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    for(const pred of predictionHistory) {
+      const li = document.createElement('li');
+      li.textContent = pred;
+      historyList.appendChild(li);
+    }
+  }
+</script>
+
+</body>
+</html>

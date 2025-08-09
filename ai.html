@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>USELESS AI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background: #f5f9fc;
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #e1e8f0;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #d1dbe5;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #34495e;
+    }
+    header label {
+      font-size: 0.9rem;
+      color: #607d8b;
+    }
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #ffffff;
+    }
+    .msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      line-height: 1.5;
+      word-wrap: break-word;
+      font-size: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .you {
+      align-self: flex-end;
+      background: #2e86de;
+      color: white;
+      font-weight: 500;
+    }
+    .bot {
+      align-self: flex-start;
+      background: #ecf0f1;
+      color: #34495e;
+    }
+    footer {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px;
+      background: #e1e8f0;
+      border-top: 1px solid #d1dbe5;
+    }
+    input[type=text] {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 1rem;
+      color: #2c3e50;
+      background: #fff;
+      transition: border-color 0.2s ease-in-out;
+    }
+    input[type=text]:focus {
+      outline: none;
+      border-color: #2e86de;
+      box-shadow: 0 0 5px rgba(46, 134, 222, 0.4);
+    }
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #2e86de;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+    button:hover {
+      background: #1b4f72;
+    }
+    @media (max-width: 600px) {
+      .msg {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CUTU 🤖</h1>
+    <label><input id="smarter" type="checkbox" /> Be a little smarter</label>
+  </header>
+  <main id="chat"></main>
+  <footer>
+    <input id="q" type="text" placeholder="Type your message..." />
+    <button id="send">Send</button>
+  </footer>
+
+  <script>
+    const adjectives = [
+      "astonishing",
+      "mildly suspicious",
+      "completely wrong",
+      "shockingly average",
+      "undeniably dramatic",
+      "questionably genius",
+      "painfully obvious",
+      "absurdly bold",
+      "chaotically neutral"
+    ];
+    const puns = [
+      "the moon ate my homework",
+      "because reasons",
+      "blame it on the Wi-Fi",
+      "asks the cat",
+      "it felt like a Tuesday",
+      "powered by sheer laziness",
+      "as endorsed by imaginary experts",
+      "because reality took a coffee break"
+    ];
+    const nonsense = [
+      "a sandwich",
+      "42",
+      "an ancient sock",
+      "a potato with feelings",
+      "quantum unicorn",
+      "a sentient stapler",
+      "the ghost of Wi-Fi past",
+      "a penguin in sunglasses",
+      "a taco with trust issues"
+    ];
+    const emojis = ["😂", "🤷", "🙃", "😵‍💫", "🤖", "🥴", "😜", "🫠"];
+
+    function random(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function humorize(base, smarter) {
+      const addon = smarter
+        ? ` (also, ${random(puns)})`
+        : ` — obviously ${random(nonsense)}`;
+      return base + " " + random(emojis) + addon;
+    }
+
+    // FAKE AI reply generator with varied longer replies
+    async function generateAnswerFromAI(prompt, smarter) {
+      const tones = [
+        () => `Honestly, that sounds ${random(adjectives)}, but who am I to judge? ${random(emojis)}`,
+        () => `You know, I've been thinking about that, and it’s kinda ${random(adjectives)}. ${random(puns)}`,
+        () => `If I had a brain, I'd say it's ${random(adjectives)}. Meanwhile, here’s a fun fact: ${random(nonsense)}! ${random(emojis)}`,
+        () => `Well, it might be ${random(adjectives)} — but hey, nobody's perfect! ${random(puns)}`,
+        () => `Ah, classic ${random(adjectives)} situation, wrapped up in mystery and a sprinkle of chaos. ${random(emojis)}`,
+        () => `You’re really stirring the pot with that one. It’s definitely ${random(adjectives)}, and probably ${random(nonsense)}. ${random(puns)}`,
+        () => `That’s as ${random(adjectives)} as it gets, if you ask me. Or don’t. ${random(emojis)}`,
+        () => `In the grand scheme of things, it’s just ${random(adjectives)} nonsense, but I like it. ${random(puns)}`
+      ];
+
+      const base = tones[Math.floor(Math.random() * tones.length)]();
+
+      return humorize(base, smarter);
+    }
+
+    function appendMsg(role, text) {
+      const div = document.createElement("div");
+      div.className = "msg " + (role === "You" ? "you" : "bot");
+      div.textContent = text;
+      document.getElementById("chat").appendChild(div);
+      div.scrollIntoView();
+    }
+
+    const q = document.getElementById("q"),
+      send = document.getElementById("send"),
+      smarter = document.getElementById("smarter");
+
+    async function sendMsg() {
+      const val = q.value.trim();
+      if (!val) return;
+      appendMsg("You", val);
+      q.value = "";
+      appendMsg("Bot", "Thinking...");
+      const answer = await generateAnswerFromAI(val, smarter.checked);
+      const botMessages = document.querySelectorAll(".bot");
+      botMessages[botMessages.length - 1].textContent = answer;
+    }
+
+    send.onclick = sendMsg;
+    q.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMsg();
+    });
+
+    // Get username from localStorage (saved at login)
+    const username = localStorage.getItem('username') || 'there';
+
+    // Personalized initial greeting
+    appendMsg("Bot", `Hi, ${username}! I’m your Personal AI, now with actual brain cells. Ask me something.`);
+  </script>
+</body>
+</html>

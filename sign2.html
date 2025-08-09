@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minimal Signup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #ffffff, #e0e0e0);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    form {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      width: 320px;
+      transition: transform 0.2s;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: #222;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.3s;
+    }
+
+    input:focus {
+      border-color: #333;
+      box-shadow: 0 0 5px rgba(51, 51, 51, 0.3);
+      outline: none;
+    }
+
+    .password-strength {
+      font-size: 0.8rem;
+      margin-top: -0.75rem;
+      margin-bottom: 1rem;
+      color: #666;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.6rem;
+      background-color: #333;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    .error {
+      color: #d33;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .success {
+      color: #080;
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: bold;
+      opacity: 1;
+      transition: opacity 0.5s ease-out;
+    }
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    /* Shake animation for errors */
+    .shake {
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+  </style>
+
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <form id="signupForm" novalidate>
+    <h2>Sign Up</h2>
+
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" required />
+    <div class="error" id="nameError"></div>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required />
+    <div class="error" id="usernameError"></div>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required minlength="6" />
+    <div class="password-strength" id="passwordStrength">Strength: N/A</div>
+    <div class="error" id="passwordError"></div>
+
+    <button type="submit">Create Account</button>
+    <div class="success" id="successMsg"></div>
+  </form>
+
+  <script>
+    const supabaseUrl = 'https://mjavakfhtapfukjabnhb.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qYXZha2ZodGFwZnVramFibmhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwOTE5NzUsImV4cCI6MjA1OTY2Nzk3NX0.n8K1_pSNfPbsexvKmFcYcN90FU4GhS9lC0kGM7NXs_E';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const form = document.getElementById('signupForm');
+    const nameInput = document.getElementById('name');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    const nameError = document.getElementById('nameError');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+    const successMsg = document.getElementById('successMsg');
+
+    passwordInput.addEventListener('input', () => {
+      const val = passwordInput.value;
+      let strength = 'Weak';
+      let color = '#d33';
+
+      if (val.length >= 6 && /[0-9]/.test(val) && /[a-zA-Z]/.test(val)) {
+        strength = 'Medium';
+        color = '#c49b00';
+      }
+
+      if (val.length >= 8 && /[0-9]/.test(val) && /[a-z]/.test(val) && /[A-Z]/.test(val) && /[^a-zA-Z0-9]/.test(val)) {
+        strength = 'Strong';
+        color = '#080';
+      }
+
+      passwordStrength.textContent = `Strength: ${strength}`;
+      passwordStrength.style.color = color;
+    });
+
+    function clearErrors() {
+      nameError.textContent = '';
+      usernameError.textContent = '';
+      passwordError.textContent = '';
+      successMsg.textContent = '';
+      successMsg.classList.remove('fade-out');
+      successMsg.style.color = '#080';
+    }
+
+    function shakeForm() {
+      form.classList.add('shake');
+      setTimeout(() => form.classList.remove('shake'), 300);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      let valid = true;
+
+      if (!nameInput.value.trim()) {
+        nameError.textContent = 'Name is required.';
+        valid = false;
+      }
+
+      if (!usernameInput.value.trim()) {
+        usernameError.textContent = 'Username is required.';
+        valid = false;
+      }
+
+      if (passwordInput.value.length < 6) {
+        passwordError.textContent = 'Password must be at least 6 characters.';
+        valid = false;
+      }
+
+      if (valid) {
+        const { data, error } = await supabaseClient
+          .from('hacko')
+          .insert([
+            { name: nameInput.value.trim(), username: usernameInput.value.trim(), password: passwordInput.value }
+          ]);
+
+        if (error) {
+          console.error('Supabase insert error:', error);
+          successMsg.textContent = 'Error: ' + error.message;
+          successMsg.style.color = '#d33';
+          shakeForm();
+        } else {
+          successMsg.textContent = 'Account created successfully!';
+          successMsg.style.color = '#080';
+          form.reset();
+          passwordStrength.textContent = 'Strength: N/A';
+          passwordStrength.style.color = '#666';
+
+          setTimeout(() => {
+            successMsg.classList.add('fade-out');
+            window.location.href = 'index.html';
+          }, 1500);
+        }
+      } else {
+        shakeForm();
+      }
+    });
+  </script>
+</body>
+</html>

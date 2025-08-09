@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>💥 THE QR CODE OF MADNESS 💥</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* CHAOS ANIMATIONS */
+    @keyframes rainbow {
+      0% { background-color: red; }
+      14% { background-color: orange; }
+      28% { background-color: yellow; }
+      42% { background-color: green; }
+      56% { background-color: blue; }
+      70% { background-color: indigo; }
+      84% { background-color: violet; }
+      100% { background-color: red; }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-30px); }
+    }
+
+    @keyframes scalePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    @keyframes hueShift {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(2deg); }
+      50% { transform: rotate(-2deg); }
+      75% { transform: rotate(1deg); }
+    }
+
+    body {
+      font-family: "Comic Sans MS", Papyrus, fantasy;
+      animation: rainbow 1s infinite;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: url('https://emojiapi.dev/api/v1/banana/64.png'), auto;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 4rem;
+      animation: spin 4s linear infinite, bounce 1.5s ease-in-out infinite, hueShift 3s infinite;
+      color: white;
+      text-shadow: 2px 2px 4px black;
+    }
+
+    .qr-container {
+      animation: scalePulse 1.2s infinite, wiggle 0.3s infinite alternate;
+      padding: 30px;
+      border: 10px dotted hotpink;
+      background: white;
+      border-radius: 50%;
+      margin-top: 20px;
+      box-shadow: 0 0 20px 5px magenta;
+    }
+
+    img {
+      width: 300px;
+      height: 300px;
+      animation: hueShift 2s infinite;
+    }
+
+    .footer {
+      font-size: 1.8rem;
+      color: lime;
+      animation: bounce 2s infinite, hueShift 4s infinite;
+      font-family: Impact, fantasy;
+      margin-top: 30px;
+    }
+
+    /* Flying text explosion */
+    .flying-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 3rem;
+      color: yellow;
+      animation: spin 6s linear infinite, bounce 1.8s infinite;
+      font-family: 'Comic Sans MS';
+    }
+
+    /* Bonus infinite stupidity: flying emojis */
+    .emoji {
+      position: absolute;
+      font-size: 2.5rem;
+      animation: spin 10s linear infinite, bounce 3s infinite;
+    }
+
+    /* Media Queries: Let's punish mobile users too */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      img {
+        width: 200px;
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>💣 SCAN IF YOU DARE 💣</h1>
+
+  <div class="qr-container">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://www.youtube.com/watch?v=dQw4w9WgXcQ&size=300x300" alt="QR Code">
+  </div>
+
+  <div class="footer">📸 Point. Scan. Regret. 📸</div>
+
+  <!-- Flying emojis -->
+  <div class="emoji" style="top:10%; left:10%;">🍕</div>
+  <div class="emoji" style="top:30%; left:80%;">🧠</div>
+  <!-- <div class="emoji" style="top:50%; left:30%;">💩</div> -->
+  <div class="emoji" style="top:70%; left:60%;">🦄</div>
+  <div class="emoji" style="top:85%; left:20%;">🪩</div>
+
+  <!-- Optional: MIDI music bomb -->
+  <!--
+  <embed src="https://www.vgmusic.com/music/console/nintendo/nes/tetris_theme.mid" hidden="true" autostart="true" loop="true">
+  -->
+
+
+  
+</body>
+</html>

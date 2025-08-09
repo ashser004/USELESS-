@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mouth Closed Trigger Block with Traps</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    #video, #canvas {
+      width: 320px;
+      height: 240px;
+      border-radius: 8px;
+      background: black;
+      display: block;
+    }
+    #status {
+      font-size: 20px;
+      margin-top: 8px;
+      height: 28px;
+    }
+    #gameCanvas {
+      background: #111;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #000;
+      background-color: #333;
+      display: block;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h2>Webcam & Detection</h2>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="status">Loading model...</div>
+  </div>
+
+  <div>
+    <h2>Game Canvas</h2>
+    <canvas id="gameCanvas" width="600" height="300"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+
+    canvas.width = 320;
+    canvas.height = 240;
+
+    let model;
+
+    // Game variables
+    const groundY = 260; // Bottom road y
+    const topGroundY = 0; // Top road y
+    const topGroundHeight = 50;
+    const roadSpeed = 2;
+
+    const block = {
+      x: 50,
+      y: groundY - 50,
+      size: 50,
+    };
+
+    const roadSpots = [];
+    const roadSpotsTop = [];
+
+    // Trap variables
+    const traps = [];
+    const trapsTop = [];
+    const trapWidth = 20;
+    const trapHeight = 30;
+    let gameOverFlag = false;
+
+    function createRoadSpots() {
+      // Dots for the bottom road
+      for (let i = 0; i < 50; i++) {
+        roadSpots.push({
+          x: Math.random() * gameCanvas.width,
+          y: groundY + Math.random() * (gameCanvas.height - groundY),
+          size: Math.random() * 3 + 1,
+        });
+      }
+      // Dots for the top road
+      for (let i = 0; i < 30; i++) {
+        roadSpotsTop.push({
+          x: Math.random() * gameCanvas.width,
+          y: topGroundY + Math.random() * topGroundHeight,
+          size: Math.random() * 3 + 1,
+        });
+      }
+    }
+
+    // Store last trap x positions to maintain spacing
+    let lastUpperTrapX = null;
+    let lastLowerTrapX = null;
+    const minTrapSpacing = block.size + 20; // 50 + 20 = 70px minimum gap
+
+    function spawnTrap() {
+      // Spawn bottom trap with spacing check
+      let x;
+      do {
+        x = gameCanvas.width + Math.random() * 100;
+      } while (lastUpperTrapX !== null && Math.abs(x - lastUpperTrapX) < minTrapSpacing);
+      traps.push({
+        x: x,
+        y: groundY - trapHeight,
+        width: trapWidth,
+        height: trapHeight,
+      });
+      lastLowerTrapX = x;
+    }
+
+    function spawnTrapTop() {
+      // Spawn top trap with spacing check against last lower trap
+      let x;
+      do {
+        x = gameCanvas.width + Math.random() * 100;
+      } while (lastLowerTrapX !== null && Math.abs(x - lastLowerTrapX) < minTrapSpacing);
+      trapsTop.push({
+        x: x,
+        y: topGroundY + topGroundHeight, // Stick trap's top edge to bottom of top road
+        width: trapWidth,
+        height: trapHeight,
+      });
+      lastUpperTrapX = x;
+    }
+
+    async function setupCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240 },
+        audio: false,
+      });
+      video.srcObject = stream;
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          resolve(video);
+        };
+      });
+    }
+
+    function distance(p1, p2) {
+      return Math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2);
+    }
+
+    function updateGame() {
+      if(gameOverFlag) return; // Stop updates if game over
+
+      // Update road spots for the bottom road
+      for (let i = 0; i < roadSpots.length; i++) {
+        roadSpots[i].x -= roadSpeed;
+        if (roadSpots[i].x < 0) {
+          roadSpots[i].x = gameCanvas.width;
+          roadSpots[i].y = groundY + Math.random() * (gameCanvas.height - groundY);
+        }
+      }
+
+      // Update road spots for the top road
+      for (let i = 0; i < roadSpotsTop.length; i++) {
+        roadSpotsTop[i].x -= roadSpeed;
+        if (roadSpotsTop[i].x < 0) {
+          roadSpotsTop[i].x = gameCanvas.width;
+          roadSpotsTop[i].y = topGroundY + Math.random() * topGroundHeight;
+        }
+      }
+
+      // Update traps positions
+      for (let i = traps.length - 1; i >= 0; i--) {
+        traps[i].x -= roadSpeed;
+        if (traps[i].x + traps[i].width < 0) {
+          traps.splice(i, 1);
+          lastLowerTrapX = null; // Reset lastLowerTrapX if trap gone
+        }
+      }
+
+      for (let i = trapsTop.length - 1; i >= 0; i--) {
+        trapsTop[i].x -= roadSpeed;
+        if (trapsTop[i].x + trapsTop[i].width < 0) {
+          trapsTop.splice(i, 1);
+          lastUpperTrapX = null; // Reset lastUpperTrapX if trap gone
+        }
+      }
+
+      // Block's vertical movement based on status
+      const text = status.textContent;
+      if (text === 'Mouth Closed 😐') {
+        block.y = topGroundY + topGroundHeight; // Up (on top road)
+      } else if(text === 'Face Not Detected') {
+        block.y = groundY - block.size; // Down (on bottom road)
+      } else {
+        // Keep last position (or you can decide any default)
+      }
+
+      // Collision detection with bottom traps (block on bottom road)
+      for (const trap of traps) {
+        if (rectIntersect(block.x, block.y, block.size, block.size,
+                          trap.x, trap.y, trap.width, trap.height)) {
+          triggerGameOver();
+        }
+      }
+
+      // Collision detection with top traps (block on top road)
+      for (const trap of trapsTop) {
+        if (rectIntersect(block.x, block.y, block.size, block.size,
+                          trap.x, trap.y, trap.width, trap.height)) {
+          triggerGameOver();
+        }
+      }
+    }
+
+    function drawGame() {
+      // Clear canvas
+      gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+      // Draw background (sky)
+      gameCtx.fillStyle = '#444';
+      gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+      // Draw top road
+      gameCtx.fillStyle = '#4A4A4A';
+      gameCtx.fillRect(0, topGroundY, gameCanvas.width, topGroundHeight);
+
+      // Draw bottom road
+      gameCtx.fillStyle = '#4A4A4A';
+      gameCtx.fillRect(0, groundY, gameCanvas.width, gameCanvas.height - groundY);
+
+      // Draw road spots (visual movement) on the bottom road
+      gameCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      for (const spot of roadSpots) {
+        gameCtx.beginPath();
+        gameCtx.arc(spot.x, spot.y, spot.size, 0, Math.PI * 2);
+        gameCtx.fill();
+      }
+
+      // Draw road spots (visual movement) on the top road
+      for (const spot of roadSpotsTop) {
+        gameCtx.beginPath();
+        gameCtx.arc(spot.x, spot.y, spot.size, 0, Math.PI * 2);
+        gameCtx.fill();
+      }
+
+      // Draw traps (bottom)
+      gameCtx.fillStyle = 'red';
+      for (const trap of traps) {
+        gameCtx.fillRect(trap.x, trap.y, trap.width, trap.height);
+      }
+
+      // Draw traps (top)
+      for (const trap of trapsTop) {
+        gameCtx.fillRect(trap.x, trap.y, trap.width, trap.height);
+      }
+
+      // Draw block (player)
+      gameCtx.fillStyle = 'orange';
+      gameCtx.fillRect(block.x, block.y, block.size, block.size);
+
+      // If game over, draw overlay
+      if(gameOverFlag) {
+        gameCtx.fillStyle = 'rgba(0,0,0,0.7)';
+        gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+        gameCtx.fillStyle = 'white';
+        gameCtx.font = '48px Arial';
+        gameCtx.textAlign = 'center';
+        gameCtx.fillText('Game Over!', gameCanvas.width / 2, gameCanvas.height / 2 - 20);
+        gameCtx.font = '24px Arial';
+        gameCtx.fillText('Click to Restart', gameCanvas.width / 2, gameCanvas.height / 2 + 20);
+      }
+    }
+
+    function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
+      return !(x2 > x1 + w1 ||
+               x2 + w2 < x1 ||
+               y2 > y1 + h1 ||
+               y2 + h2 < y1);
+    }
+
+    function triggerGameOver() {
+      gameOverFlag = true;
+      status.textContent = 'Game Over!';
+      status.style.color = 'yellow';
+    }
+
+    function restartGame() {
+      gameOverFlag = false;
+      status.textContent = 'Model loaded, detecting...';
+      traps.length = 0;
+      trapsTop.length = 0;
+      block.y = groundY - block.size; // Reset block on ground
+      lastUpperTrapX = null;
+      lastLowerTrapX = null;
+    }
+
+    // Spawn traps periodically ensuring spacing constraints
+    setInterval(() => {
+      if (!gameOverFlag) {
+        spawnTrap();
+        spawnTrapTop();
+      }
+    }, 2000);
+
+    async function detect() {
+      const predictions = await model.estimateFaces(video, false);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if (predictions.length > 0) {
+        const face = predictions[0];
+        const landmarks = face.landmarks;
+
+        const nose = landmarks[2];
+        const mouth = landmarks[3];
+
+        ctx.fillStyle = 'red';
+        [nose, mouth].forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p[0], p[1], 5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+
+        const verticalDist = mouth[1] - nose[1];
+
+        if (verticalDist > 20) {
+          // Mouth open
+          if(!gameOverFlag) {
+            status.textContent = 'Mouth Open 😃';
+            status.style.color = 'lime';
+          }
+        } else {
+          // Mouth closed
+          if(!gameOverFlag) {
+            status.textContent = 'Mouth Closed 😐';
+            status.style.color = 'red';
+          }
+        }
+      } else {
+        if(!gameOverFlag) {
+          status.textContent = 'Face Not Detected';
+          status.style.color = 'orange';
+        }
+      }
+
+      updateGame();
+      drawGame();
+
+      requestAnimationFrame(detect);
+    }
+
+    async function main() {
+      await setupCamera();
+      model = await blazeface.load();
+      status.textContent = 'Model loaded, detecting...';
+      createRoadSpots();
+      detect();
+    }
+
+    main();
+
+    // Restart game on click if game over
+    gameCanvas.addEventListener('click', () => {
+      if(gameOverFlag) {
+        restartGame();
+      }
+    });
+  </script>
+
+</body>
+</html>

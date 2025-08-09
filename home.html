@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IS THIS HOMEPAGE!!</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .user-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+    }
+
+    .user-info h2 {
+      margin: 0;
+    }
+
+    .user-info p {
+      margin: 0;
+      color: #888;
+    }
+
+    .sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 24px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(118, 75, 162, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(118, 75, 162, 0.6);
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .card p {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- User Detail Bar -->
+    <div class="user-bar">
+      <img src="https://i.pravatar.cc/100" alt="User Avatar" class="avatar" />
+      <div class="user-info">
+        <h2>Loading...</h2>
+        <p></p>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="sections">
+      <div class="card" onclick="window.location.href='ai.html'">
+        <h3>USELESS AI</h3>
+        <p>blah blah blah</p>
+      </div>
+
+      <div class="card" onclick="window.location.href='face.html'">
+        <h3>FUTURE PREDICTION</h3>
+        <p>Really... What a drag!!!</p>
+      </div>
+      <div class="card" onclick="window.location.href='game.html'">
+        <h3>FACE OFF</h3>
+        <p>It crashes for sure..!! Open at own risk </p>
+      </div>
+      <div class="card" onclick="window.location.href='scanner.html'">
+        <h3>SECRET SCANNER</h3>
+        <p>Oopss....</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = 'https://mjavakfhtapfukjabnhb.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qYXZha2ZodGFwZnVramFibmhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwOTE5NzUsImV4cCI6MjA1OTY2Nzk3NX0.n8K1_pSNfPbsexvKmFcYcN90FU4GhS9lC0kGM7NXs_E';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    function goTo(page) {
+      window.location.href = page;
+    }
+
+    async function loadUser() {
+      const username = localStorage.getItem('username');
+      if (!username) {
+        alert('No user logged in. Redirecting to login page.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const nameElem = document.querySelector('.user-info h2');
+      const emailElem = document.querySelector('.user-info p');
+      nameElem.textContent = 'Loading...';
+      emailElem.textContent = '';
+
+      const { data, error } = await supabaseClient
+        .from('hacko')
+        .select('name, username')
+        .eq('username', username)
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        alert('User data not found. Redirecting to login.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      nameElem.textContent = data.name;
+      emailElem.textContent = data.username;
+    }
+
+    loadUser();
+  </script>
+</body>
+</html>
