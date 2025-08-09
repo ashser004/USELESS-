@@ -59,6 +59,7 @@ None
 ### Screenshots
 
 #### HOMEPAGE
+#### Made with supabase as its database, user info is stored and is used later in the home page and AI pages.
 
 <br>
 
@@ -67,6 +68,7 @@ None
 ---
 
 #### USELESS AI
+### Actually, pretty useless, it was embedded with api keys, because of security issues, just a demo app
 
 <br>
 
@@ -75,6 +77,7 @@ None
 ---
 
 #### MYSTIC CAM
+#### Take a picture and give a lucky prediction
 
 <br>
 
@@ -87,6 +90,7 @@ None
 ---
 
 #### GAME - FACE OFF
+#### just a facial recognition site converted to a small game 
 
 <br>
 
@@ -99,12 +103,17 @@ None
 ---
 
 #### QR SCAN
+### pop ups a qr code which leads u to a random thing,goal is dynamic screen.
 
 <br>
 
 ![QR Scan](https://i.ibb.co/4Z04TKBF/Screenshot-2025-08-09-051130.png)
 
 ---
+
+### VIDEO
+
+[![Watch the video](https://img.youtube.com/vi/vQ06Fn7-g6g/maxresdefault.jpg)](https://youtu.be/vQ06Fn7-g6g)
 
 ## Team Contributions
 - Ashmith: Backend
